@@ -9,8 +9,8 @@ from tornado.options import define, options
 settings = {
 #    "static_path": os.path.join( os.path.dirname(__file__),"static"),
 }
-#filepath = os.path.abspath(__file__).strip(__file__)
-filepath = '/svr/file/'
+filepath = os.path.abspath(__file__).strip(__file__)
+#filepath = '/svr/file/'
 downloadpath = os.path.join(filepath, "file")
 StaticFH = tornado.web.StaticFileHandler
 RedirectH = tornado.web.RedirectHandler
@@ -68,7 +68,7 @@ class DLHandler(tornado.web.RequestHandler):
             t = t.load("file_template.html");
             self.write(t.generate(names=names,path=path))
             return
-        super(MainHandler,self).get(path,include_body)
+        super(MainHandler, self).get(path, include_body)
 
 app = tornado.web.Application(
     handlers=[

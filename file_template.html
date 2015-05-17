@@ -10,25 +10,26 @@
 			-moz-transition: all 0.3s ease; -webkit-transition: all 0.3s ease; -o-transition: all 0.3s ease; transition: all 0.3s ease;
 		}
 		body{
-			background: #eeeeee;
+			background: #e8e8e8;
 			font-size:0.75em;
 			-moz-user-select:none;
 			padding: 0;
 			margin: 0;
+			font-family: 'Roboto Condensed','Droid Sans',arial,sans-serif;
 		}
 		.title{
-			height: 50px;
+			height: 60px;
 			top: 0; left: 0;
 			background: #f8f8f8;
 			width: 100%;
-			line-height: 50px;
+			line-height: 60px;
 			font-size: 30px;
 			padding-left: 20px;
 		}
 		.container{
 			list-style: none;
+			overflow: auto;
 			margin: 0;
-			margin-top: 0.5%;
 			padding: 0;
 			font-size: 1.3em;
 		}
@@ -44,23 +45,23 @@
 			text-decoration: none;
 		}
 		.file, .dir{
-			margin: 0.5% 0.5%;
+			margin: 1% 0.5%;
 			padding: 0 1%;
 			float: left;
 			width: 95%;
 			height: 40px;
 			line-height: 40px;
+			position: relative;
 		}
 		.file:hover, .dir:hover{
-			background:#fcfcfc; border-radius:8px;
+			background: rgba(255, 255, 255, 0.9);
+			box-shadow: 0 0 4px 2px rgba(138, 138, 138, 0.5);
 		}
 		.file{
-			border: 1px red dashed;
-			background: #EEEEBB;
+			background: rgba(250, 250, 250, 0.8);
 		}
 		.dir{
-			border: 1px blue dashed;
-			background: #FFFFCC;
+			background: rgba(252, 252, 240, 0.8);
 		}
 		@media screen and (min-width: 400px) {
 			.file, .dir{
@@ -108,7 +109,7 @@
 	<div class="title">{{path}}</div>
 	<ul class="container">
 		{% for link, name, type in names %}
-		<li class="{{type}} trans"><acronym title="{{name}}"><a href="{{link}}">{{name}}</a></acronym></li>
+		<li class="{{type}} trans"><acronym title="{{ type }}: {{name}}"><a href="{{link}}">{{name}}</a></acronym></li>
 		{% end %}
 	</ul>
 </body>
