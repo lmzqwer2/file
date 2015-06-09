@@ -12,8 +12,10 @@ settings = {
 filepath = os.path.abspath(__file__).strip(__file__)
 #filepath = '/svr/file/'
 downloadpath = os.path.join(filepath, "file")
+csspath = os.path.join(filepath, "css")
 StaticFH = tornado.web.StaticFileHandler
 RedirectH = tornado.web.RedirectHandler
+tmpl = tornado.template.Loader(filepath).load("file_template.html");
 print __file__
 print filepath
 print downloadpath
@@ -36,10 +38,12 @@ class DLHandler(tornado.web.RequestHandler):
                 continue
             path = os.path.join(path,word)
         return path
- 
+
     def list_directory(self,path):
         names = []
         for name in ['..']+os.listdir(path):
+            if name!='..' and name.startswith('.'):
+                continue
             fullname = os.path.join(path,name)
             displayname = linkname = name
             filetype = 'file'
@@ -49,30 +53,36 @@ class DLHandler(tornado.web.RequestHandler):
                 filetype = 'dir'
             if os.path.islink(fullname):
                 displayname = name + '@'
+                filetype = 'link'
             names.append((linkname,displayname,filetype))
         return names
- 
+
+    def dir_info(self, path):
+        infoname = os.path.join(path, '.info')
+        if os.path.isfile(infoname):
+            with open(infoname, 'r') as f:
+                return f.readlines()
+        return None
+
     def get(self,path='.'):
         print path
         expath = os.path.join(self.absolute_path, path)
-        if not os.path.exists(expath):
+        if not os.path.exists(expath)\
+            or not expath.startswith(downloadpath):
             raise tornado.web.HTTPError(404)
-        if not expath.startswith(downloadpath):
-            raise tornado.web.HTTPError(403)
         if os.path.isdir(expath):
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path+'/')
                 return
             names = self.list_directory(expath)
-            t = tornado.template.Loader(filepath);
-            t = t.load("file_template.html");
-            self.write(t.generate(names=names,path=path))
+            self.write(tmpl.generate(names=names, path=path, info=self.dir_info(expath)))
             return
         super(MainHandler, self).get(path, include_body)
 
 app = tornado.web.Application(
     handlers=[
         (r'/', DLHandler, dict(path=downloadpath)),
+        (r'/css/(.*)', StaticFH, dict(path=csspath)),
         (r'/(.*)/', DLHandler, dict(path=downloadpath)),
         (r'/(.*)', StaticFH, dict(path=downloadpath)),
     ],
@@ -80,6 +90,9 @@ app = tornado.web.Application(
 )
 
 if __name__ == "__main__":
+    import sys
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
     define("port", default=8000, help="run on the given port", type=int)
     tornado.options.parse_command_line()
     http_server = tornado.httpserver.HTTPServer(app)
