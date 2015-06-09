@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block header %}
+	<link rel="stylesheet" type="text/css" href="/css/dir.css" media="screen"/>
+{% end %}
+{% block contents %}
+	<ul class="container">
+		{% for link, name, type in names %}
+		<li class="item {{type}} trans">
+			<acronym title="{{type}} : {{name}}">
+				<a href="{{link}}" {% if type=='dir_check'%} download="{{name}}" {% end %}>{{name}}</a>
+			</acronym>
+		</li>
+		{% end %}
+	</ul>
+{% end %}

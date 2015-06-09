@@ -4,18 +4,21 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import os
+import filetype
 
 from tornado.options import define, options
-settings = {
-#    "static_path": os.path.join( os.path.dirname(__file__),"static"),
-}
 filepath = os.path.abspath(__file__).strip(__file__)
 #filepath = '/svr/file/'
 downloadpath = os.path.join(filepath, "file")
 csspath = os.path.join(filepath, "css")
+jspath = os.path.join(filepath, "js")
+templatepath = os.path.join(filepath, 'templates')
 StaticFH = tornado.web.StaticFileHandler
 RedirectH = tornado.web.RedirectHandler
-tmpl = tornado.template.Loader(filepath).load("file_template.html");
+settings = {
+#    "static_path": os.path.join( os.path.dirname(__file__),"static"),
+    'template_path': templatepath
+}
 print __file__
 print filepath
 print downloadpath
@@ -75,16 +78,24 @@ class DLHandler(tornado.web.RequestHandler):
                 self.redirect(self.request.path+'/')
                 return
             names = self.list_directory(expath)
-            self.write(tmpl.generate(names=names, path=path, info=self.dir_info(expath)))
+            self.render("dir.html", names=names, path=path, info=self.dir_info(expath))
             return
-        super(MainHandler, self).get(path, include_body)
+        else:
+            with open(expath, 'r') as f:
+                text = f.read();
+            t = filetype.filetype(expath)
+            self.render("code.html", text=text, path=path, ext=t, info=None)
+            return
+        super(DLHandler, self).get(path, include_body)
 
 app = tornado.web.Application(
     handlers=[
         (r'/', DLHandler, dict(path=downloadpath)),
         (r'/css/(.*)', StaticFH, dict(path=csspath)),
-        (r'/(.*)/', DLHandler, dict(path=downloadpath)),
-        (r'/(.*)', StaticFH, dict(path=downloadpath)),
+        (r'/js/(.*)', StaticFH, dict(path=jspath)),
+        #(r'/(.*)/', DLHandler, dict(path=downloadpath)),
+        (r'/(.*)', DLHandler, dict(path=downloadpath)),
+        (r'/static/(.*)', StaticFH, dict(path=downloadpath)),
     ],
     **settings
 )
