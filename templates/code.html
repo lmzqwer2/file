@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block header %}
+	<link rel="stylesheet" type="text/css" href="/css/code.css" media="screen"/>
+	<script type="text/javascript" src="/js/SyntaxHighlighter/shCore.js"></script>
+	<link type="text/css" rel="stylesheet" href="/css/SyntaxHighlighter/shCoreEclipse.css"/>
+	{% if ext.get('js', None) is not None %}
+	<script type="text/javascript" src="/js/SyntaxHighlighter/{{ext['js']}}"></script>
+	{% end %}
+{% end %}
+{% block titlemore %}
+	<div class='download'>
+		<a href='/static{{path[-1]['url']}}' download='{{path[-1]['name']}}' class='trans link-skewed'>Download</a>
+	</div>
+{% end %}
+{% block contents %}
+	<div class="highlightcode">
+		<pre class="brush: {{ext['ext']}};">
+			{{text}}
+		</pre>
+	</div>
+	<script>
+		SyntaxHighlighter.all();
+	</script>
+{% end %}

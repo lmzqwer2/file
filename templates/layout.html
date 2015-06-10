@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>LM file</title>
+	<meta name="renderer" content="webkit|ie-comp|ie-stand">
+	<meta http-equiv="Content-Type" contect="text/html";charset=utf-8">
+	<meta name="viewport" id="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+	<link rel="stylesheet" type="text/css" href="/css/layout.css" media="screen"/>
+	{% block header %}
+	{% end %}
+</head>
+<body>
+	<div class="title">
+		<div class='path'>
+			{% for item in path%}
+			<span class='folder'>
+				{% if item['url'] is not None%}
+				<a href='{{item['url']}}' class='link-skewed'>{{item['name']}}</a>
+				{% else %}
+				<span>{{item['name']}}</span>
+				{% end %}
+			</span>
+			{% end %}
+			{% block titlemore %}
+			{% end %}
+		</div>
+		{% if info %}
+		<div class='info'>
+			{% for line in info%}
+				<p>{{line}}</p>
+			{% end %}
+		</div>
+		{% end %}
+	</div>
+	{% block contents %}
+	{% end %}
+</body>
+</html>
