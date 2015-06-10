@@ -4,6 +4,7 @@
 __author__ = 'lmzqwer2'
 
 import os.path
+import magic
 
 extname = {
 	'sh'	: 'bash',
@@ -26,6 +27,8 @@ extname = {
 	'xml'	: 'xml',
 	'html'	: 'xml',
 	'htm'	: 'xml',
+	'diff'	: 'diff',
+	'patch'	: 'patch',
 }
 
 jsname = {
@@ -77,13 +80,17 @@ jsname = {
 	'xhtml'	: 'shBrushXml.js',
 }
 
+ms = magic.open(magic.NONE)
+ms.load()
+
 def filetype(name):
+	fileinfo =  ms.file(name)
 	f = os.path.splitext(name)
 	ext = f[-1] if len(f)>1 else 'txt'
 	ext = ext.strip('.')
 	langtype = extname.get(ext, 'text')
 	jsfile = jsname.get(langtype) if langtype is not type else None
-	return {'ext': langtype, 'js': jsfile}
+	return {'readable': len(fileinfo.split('text'))>1, 'ext': langtype, 'js': jsfile}
 
 if __name__ == '__main__':
 	pass

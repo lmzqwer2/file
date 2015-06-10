@@ -43,8 +43,10 @@ class DLHandler(tornado.web.RequestHandler):
         return path
 
     def list_directory(self,path):
-        names = []
-        for name in os.listdir(path):
+        dir = os.listdir(path)
+        folder = []
+        file = []
+        for name in dir:
             if name.startswith('.'):
                 continue
             fullname = os.path.join(path,name)
@@ -54,11 +56,13 @@ class DLHandler(tornado.web.RequestHandler):
                 displayname = name + '/'
                 linkname = name + '/'
                 filetype = 'dir'
+                folder.append((linkname,displayname,filetype))
+                continue
             if os.path.islink(fullname):
                 displayname = name + '@'
                 filetype = 'link'
-            names.append((linkname,displayname,filetype))
-        return names
+            file.append((linkname,displayname,filetype))
+        return folder + file
 
     def dir_info(self, path):
         infoname = os.path.join(path, '.info')
@@ -76,7 +80,6 @@ class DLHandler(tornado.web.RequestHandler):
             link += item + '/'
             L.append(dict(name=item, url=link))
         L[0]['name'] = 'LM file'
-        L[-1]['url'] = None
         return L
 
     def get(self,path=''):
@@ -87,29 +90,37 @@ class DLHandler(tornado.web.RequestHandler):
         if not os.path.exists(expath)\
             or not expath.startswith(downloadpath):
             raise tornado.web.HTTPError(404)
+        chainpath = self.path_chain(path)
         if os.path.isdir(expath):
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path+'/')
                 return
             names = self.list_directory(expath)
-            self.render("dir.html", names=names, path=self.path_chain(path), info=self.dir_info(expath))
+            self.render("dir.html", names=names, path=chainpath, info=self.dir_info(expath))
             return
         else:
-            with open(expath, 'r') as f:
-                text = f.read();
-            t = filetype.filetype(expath)
-            self.render("code.html", text=text, path=self.path_chain(path), ext=t, info=None)
-            return
-        super(DLHandler, self).get(path, include_body)
+            chainpath[-1]['url'] = chainpath[-1]['url'][:-1]
+            info = filetype.filetype(expath)
+            if info.get('readable', False):
+                with open(expath, 'r') as f:
+                    text = f.read();
+                self.render("code.html", text=text, path=chainpath, ext=info, info=None)
+                return
+            else:
+                self.redirect('/static' + self.request.path)
+                return
+        super(DLHandler, self).get(path)
 
 app = tornado.web.Application(
     handlers=[
         (r'/', DLHandler, dict(path=downloadpath)),
+        (r'/static/', DLHandler, dict(path=downloadpath)),
+        (r'/static/(.*)/', DLHandler, dict(path=downloadpath)),
+        (r'/static/(.*)', StaticFH, dict(path=downloadpath)),
         (r'/css/(.*)', StaticFH, dict(path=csspath)),
         (r'/js/(.*)', StaticFH, dict(path=jspath)),
         #(r'/(.*)/', DLHandler, dict(path=downloadpath)),
         (r'/(.*)', DLHandler, dict(path=downloadpath)),
-        (r'/static/(.*)', StaticFH, dict(path=downloadpath)),
     ],
     **settings
 )

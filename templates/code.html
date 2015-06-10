@@ -7,6 +7,11 @@
 	<script type="text/javascript" src="/js/SyntaxHighlighter/{{ext['js']}}"></script>
 	{% end %}
 {% end %}
+{% block titlemore %}
+	<div class='download'>
+		<a href='/static{{path[-1]['url']}}' download='{{path[-1]['name']}}' class='trans link-skewed'>Download</a>
+	</div>
+{% end %}
 {% block contents %}
 	<div class="highlightcode">
 		<pre class="brush: {{ext['ext']}};">
