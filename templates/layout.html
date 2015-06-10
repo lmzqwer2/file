@@ -11,7 +11,17 @@
 </head>
 <body>
 	<div class="title">
-		<div class='name'>{{path}}</div>
+		<div class='path'>
+			{% for item in path%}
+			<span class='folder'>
+				{% if item['url'] is not None%}
+				<a href='{{item['url']}}'>{{item['name']}}</a>
+				{% else %}
+				<span>{{item['name']}}</span>
+				{% end %}
+			</span>
+			{% end %}
+		</div>
 		{% if info %}
 		<div class='info'>
 			{% for line in info%}

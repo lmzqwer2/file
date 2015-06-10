@@ -1,4 +1,4 @@
-.trans{
+.trans, .folder a{
     -moz-transition: all 0.3s ease; -webkit-transition: all 0.3s ease; -o-transition: all 0.3s ease; transition: all 0.3s ease;
 }
 body{
@@ -13,17 +13,58 @@ body{
     background: #f8f8f8;
     padding: 1% 1%;
 }
-.name{
-    height: 60px;
+.folder:after{
+    content:'>';
+}
+.folder *{
+    text-decoration: none;
+    color: black;
+    background: #fcfcfc;
+    padding: 0.5% 1%;
+    margin: 1% 0;
+    border: 1px dashed transparent;
+}
+.folder a:hover{
+    text-shadow: 0 0 0.1em #000;
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+.path{
     top: 0; left: 0;
-    line-height: 60px;
-    font-size: 30px;
+    line-height: 2.5;
+    font-size: 1.7em;
 }
 .info{
     border-left: 5px solid #cfcfcf;
+    margin: 0.5% 0;
     padding: 0.5% 1%;
     background: #ececec;
 }
 .info p{
     margin: 0.5% 0;
+}
+@media screen and (min-width: 400px) {
+    .path{
+        font-size: 1.6em;
+    }
+}
+@media screen and (min-width: 750px) {
+    .path{
+        font-size: 1.7em;
+    }
+}
+@media screen and (min-width: 1050px) {
+    .path{
+        font-size: 1.8em;
+    }
+}
+@media screen and (min-width: 1400px) {
+    .path{
+        font-size: 1.9em;
+    }
+}
+@media screen and (min-width: 1750px) {
+    .path{
+        font-size: 2.0em;
+    }
 }

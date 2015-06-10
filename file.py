@@ -44,8 +44,8 @@ class DLHandler(tornado.web.RequestHandler):
 
     def list_directory(self,path):
         names = []
-        for name in ['..']+os.listdir(path):
-            if name!='..' and name.startswith('.'):
+        for name in os.listdir(path):
+            if name.startswith('.'):
                 continue
             fullname = os.path.join(path,name)
             displayname = linkname = name
@@ -67,7 +67,21 @@ class DLHandler(tornado.web.RequestHandler):
                 return f.readlines()
         return None
 
-    def get(self,path='.'):
+    def path_chain(self, path):
+        folder = path.split('/')
+        folder[0] = ''
+        L = []
+        link = ''
+        for item in folder:
+            link += item + '/'
+            L.append(dict(name=item, url=link))
+        L[0]['name'] = 'LM file'
+        L[-1]['url'] = None
+        return L
+
+    def get(self,path=''):
+        path = './' + path
+        path = path.strip('/')
         print path
         expath = os.path.join(self.absolute_path, path)
         if not os.path.exists(expath)\
@@ -78,13 +92,13 @@ class DLHandler(tornado.web.RequestHandler):
                 self.redirect(self.request.path+'/')
                 return
             names = self.list_directory(expath)
-            self.render("dir.html", names=names, path=path, info=self.dir_info(expath))
+            self.render("dir.html", names=names, path=self.path_chain(path), info=self.dir_info(expath))
             return
         else:
             with open(expath, 'r') as f:
                 text = f.read();
             t = filetype.filetype(expath)
-            self.render("code.html", text=text, path=path, ext=t, info=None)
+            self.render("code.html", text=text, path=self.path_chain(path), ext=t, info=None)
             return
         super(DLHandler, self).get(path, include_body)
 
