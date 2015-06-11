@@ -13,7 +13,6 @@ downloadpath = os.path.join(filepath, "file")
 csspath = os.path.join(filepath, "css")
 jspath = os.path.join(filepath, "js")
 templatepath = os.path.join(filepath, 'templates')
-StaticFH = tornado.web.StaticFileHandler
 RedirectH = tornado.web.RedirectHandler
 settings = {
 #    "static_path": os.path.join( os.path.dirname(__file__),"static"),
@@ -23,7 +22,33 @@ print __file__
 print filepath
 print downloadpath
 
-class DLHandler(tornado.web.RequestHandler):
+def path_chain(path):
+    folder = path.split('/')
+    if folder[0]=='.':
+        folder[0] = ''
+    L = []
+    link = ''
+    for item in folder:
+        link += item + '/'
+        L.append(dict(name=item, url=link))
+    return L
+
+def dir_info(path):
+    infoname = os.path.join(path, '.info')
+    if os.path.isfile(infoname):
+        with open(infoname, 'r') as f:
+            return f.readlines()
+    return None
+
+def dir_upload(path):
+    if os.path.isfile(path):
+        path = os.path.dirname(path)
+    uploadname = os.path.join(path, '.upload')
+    if os.path.isfile(uploadname):
+        return True
+    return False
+
+class ViewHandler(tornado.web.RequestHandler):
     def initialize(self, path):
         self.absolute_path = path;
 
@@ -64,24 +89,6 @@ class DLHandler(tornado.web.RequestHandler):
             file.append((linkname,displayname,filetype))
         return folder + file
 
-    def dir_info(self, path):
-        infoname = os.path.join(path, '.info')
-        if os.path.isfile(infoname):
-            with open(infoname, 'r') as f:
-                return f.readlines()
-        return None
-
-    def path_chain(self, path):
-        folder = path.split('/')
-        folder[0] = ''
-        L = []
-        link = ''
-        for item in folder:
-            link += item + '/'
-            L.append(dict(name=item, url=link))
-        L[0]['name'] = 'LM file'
-        return L
-
     def get(self,path=''):
         path = './' + path
         path = path.strip('/')
@@ -90,13 +97,14 @@ class DLHandler(tornado.web.RequestHandler):
         if not os.path.exists(expath)\
             or not expath.startswith(downloadpath):
             raise tornado.web.HTTPError(404)
-        chainpath = self.path_chain(path)
+        chainpath = path_chain(path)
+        chainpath[0]['name'] = 'LM file'
         if os.path.isdir(expath):
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path+'/')
                 return
             names = self.list_directory(expath)
-            self.render("dir.html", names=names, path=chainpath, info=self.dir_info(expath))
+            self.render("dir.html", names=names, path=chainpath, info=dir_info(expath))
             return
         else:
             chainpath[-1]['url'] = chainpath[-1]['url'][:-1]
@@ -109,18 +117,32 @@ class DLHandler(tornado.web.RequestHandler):
             else:
                 self.redirect('/static' + self.request.path)
                 return
-        super(DLHandler, self).get(path)
+        super(ViewHandler, self).get(path)
+
+class StaticFH(tornado.web.StaticFileHandler):
+    def validate_absolute_path(self, root, absolute_path):
+        if dir_upload(absolute_path):
+            return
+        print absolute_path
+        return super(StaticFH, self).validate_absolute_path(root, absolute_path)
+
+class DownloadFH(StaticFH):
+    def set_extra_headers(self, path):
+        self.set_header('Content-Disposition', 'attachment;')
 
 app = tornado.web.Application(
     handlers=[
-        (r'/', DLHandler, dict(path=downloadpath)),
-        (r'/static/', DLHandler, dict(path=downloadpath)),
-        (r'/static/(.*)/', DLHandler, dict(path=downloadpath)),
+        (r'/download/', ViewHandler, dict(path=downloadpath)),
+        (r'/download/(.*)/', ViewHandler, dict(path=downloadpath)),
+        (r'/download/(.*)', DownloadFH, dict(path=downloadpath)),
+        (r'/static/', ViewHandler, dict(path=downloadpath)),
+        (r'/static/(.*)/', ViewHandler, dict(path=downloadpath)),
         (r'/static/(.*)', StaticFH, dict(path=downloadpath)),
         (r'/css/(.*)', StaticFH, dict(path=csspath)),
         (r'/js/(.*)', StaticFH, dict(path=jspath)),
-        #(r'/(.*)/', DLHandler, dict(path=downloadpath)),
-        (r'/(.*)', DLHandler, dict(path=downloadpath)),
+        #(r'/(.*)/', ViewHandler, dict(path=downloadpath)),
+        (r'/', ViewHandler, dict(path=downloadpath)),
+        (r'/(.*)', ViewHandler, dict(path=downloadpath)),
     ],
     **settings
 )
