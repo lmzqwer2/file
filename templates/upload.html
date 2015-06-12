@@ -1,0 +1,17 @@
+{% extends "dir.html" %}
+{% block dirheader %}
+	<link rel="stylesheet" type="text/css" href="/css/upload.css" media="screen"/>
+	<script type="text/JavaScript" src="/js/upload.js"></script>
+{% end %}
+{% block beforecontainer%}
+    <form action='.' enctype="multipart/form-data" method='post' id='upload' class='item dir trans upload'>
+        <span class='uploadbutton item trans responsive'>
+            <input type='file' class='uploadfile' name='file' id='file' multiple onchange='changefile(this)'/>
+            <a href='javascript:void(0)' class='uploadtext' id='filename'>+ Add file</a>
+        </span>
+        <span class='uploadbutton item trans responsive'>
+            <input type='submit' class='uploadsubmit' name='submit' value='Upload'/>
+            <a href='javascript:void(0)' class='uploadtext'>Upload</a>
+        </span>
+    </form>
+{% end %}
