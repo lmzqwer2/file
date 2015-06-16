@@ -6,6 +6,10 @@ __author__ = 'lmzqwer2'
 import os.path
 import magic
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 extname = {
 	'sh'	: 'bash',
 	'cs'	: 'csharp',

@@ -1,4 +1,25 @@
+function $(id){
+    return document.getElementById(id);
+}
+
 (function(undefine){
+    window.onload = function(){
+        var draginner = $('draginner');
+        var dragwrap = $('dragwrap');
+        var body = document.body;
+        function draghover(e){
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        function dragdrop(e){
+            e.stopPropagation();
+            e.preventDefault();
+            var files = e.target.files || e.dataTransfer.files;
+            console.log(files);
+        }
+        $('filename').addEventListener('dragover', draghover, false);
+        $('filename').addEventListener('drop', dragdrop, false);
+    }
     window.changefile = function(input){
         var file = input.files;
         if (file.length>0){

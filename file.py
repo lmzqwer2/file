@@ -176,7 +176,7 @@ class ViewHandler(tornado.web.RequestHandler):
             and contentlength < UpperBoundSizeOfSingleUpload:
                 file_metas=self.request.files.get('file', [])
                 for meta in file_metas:
-                    filename = meta['filename']
+                    filename = meta['filename'].lstrip('.')
                     filepath = os.path.join(expath, filename)
                     if os.path.exists(filepath):
                         continue
