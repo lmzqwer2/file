@@ -5,6 +5,7 @@ import tornado.options
 import tornado.web
 import os, re
 import filetype
+import chardet
 
 from tornado.options import define, options
 filepath = os.path.abspath(__file__).strip(__file__)
@@ -156,6 +157,9 @@ class ViewHandler(tornado.web.RequestHandler):
             if info.get('readable', False):
                 with open(expath, 'r') as f:
                     text = f.read();
+                t = chardet.detect(text)
+                if t['confidence'] > 0.9 and t['encoding'] != 'utf-8':
+                    text = text.decode(t['encoding']).encode('utf-8')
                 self.render("code.html", text=text, path=chainpath, ext=info, info=None)
                 return
             else:

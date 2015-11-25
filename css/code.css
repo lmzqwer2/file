@@ -1,7 +1,10 @@
-.highlightcode{
-    font-size: 1.3em;
-    padding: 0 1%;
+.AceEditor{
+    margin: 0;
     position: relative;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 .download{
     float: right;

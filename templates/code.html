@@ -1,11 +1,6 @@
 {% extends "layout.html" %}
 {% block header %}
 	<link rel="stylesheet" type="text/css" href="/css/code.css" media="screen"/>
-	<script type="text/javascript" src="/js/SyntaxHighlighter/shCore.js"></script>
-	<link type="text/css" rel="stylesheet" href="/css/SyntaxHighlighter/shCoreEclipse.css"/>
-	{% if ext.get('js', None) is not None %}
-	<script type="text/javascript" src="/js/SyntaxHighlighter/{{ext['js']}}"></script>
-	{% end %}
 {% end %}
 {% block titlemore %}
 	<div class='download'>
@@ -13,12 +8,30 @@
 	</div>
 {% end %}
 {% block contents %}
-	<div class="highlightcode">
-		<pre class="brush: {{ext['ext']}};">
-			{{text}}
+	<div id="AceEditor" class="AceEditor"><pre class="{{ext['ext']}}">{{text}}
 		</pre>
 	</div>
+	<script src="/js/AceEditor/ace.js" type="text/javascript" charset="utf-8"></script>
 	<script>
-		SyntaxHighlighter.all();
+		var editor = ace.edit("AceEditor");
+		editor.setTheme("ace/theme/iplastic");
+		{% if ext['js'] is not None %}
+		editor.session.setMode("ace/mode/{{ext['js']}}");
+		{% end %}
+		var AceEditor = document.getElementById("AceEditor");
+		var title = document.getElementById('title');
+		AceEditor.style.fontSize = '1.4em';
+		(function(){
+			function resizeAceEditor(e){
+				var inheight = window.innerHeight
+					|| document.documentElement.clientHeight
+					|| document.body.clientHeight
+					+1;
+				var titleHeight = (title.innerHeight || title.clientHeight || title.offsetHeight) || 0;
+				AceEditor.style.height = (inheight - titleHeight) + 'px';
+			};
+			resizeAceEditor();
+			window.addEventListener('resize', resizeAceEditor);
+		})();
 	</script>
 {% end %}
