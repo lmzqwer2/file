@@ -88,7 +88,11 @@ ms = magic.open(magic.NONE)
 ms.load()
 
 def filetype(name):
-	fileinfo =  ms.file(name)
+	fileinfo = ''
+	try:
+		fileinfo =  ms.file(name)
+	except:
+		print "something wrong with file name", name
 	f = os.path.splitext(name)
 	ext = f[-1] if len(f)>1 else 'txt'
 	ext = ext.strip('.')

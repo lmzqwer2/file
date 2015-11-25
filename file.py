@@ -28,7 +28,8 @@ define("port", default=listenport, help="run on the given port", type=int)
 define("singlesize", default=UpperBoundSizeOfSingleUpload, help="limit of single upload", type=int)
 define("dirsize", default=UpperBoundSizeOfDir, help="limit of dir size", type=int)
 define("dirnum", default=UpperBoundFileNumberOfDir, help="limit of file number in dir", type=int)
-define("hostname", default=hostname, help="limit of file number in dir", type=str)
+define("hostname", default=hostname, help="hostname accepted by StaticFileHandler", type=str)
+define("folderpath", default=downloadpath, help="root folder path of this program", type=str)
 
 validUploadFileName = re.compile(r'^[^./\\<>|:"*?][^/\\<>|:"*?]*$')
 
@@ -200,31 +201,37 @@ class DownloadFH(StaticFH):
     def set_extra_headers(self, path):
         self.set_header('Content-Disposition', 'attachment;')
 
-app = tornado.web.Application(
-    handlers=[
-        (r'/download/', ViewHandler, dict(path=downloadpath)),
-        (r'/download/(.*)/', ViewHandler, dict(path=downloadpath)),
-        (r'/download/(.*)', DownloadFH, dict(path=downloadpath)),
-        (r'/static/', ViewHandler, dict(path=downloadpath)),
-        (r'/static/(.*)/', ViewHandler, dict(path=downloadpath)),
-        (r'/static/(.*)', StaticFH, dict(path=downloadpath)),
-        (r'/css/(.*)', StaticFH, dict(path=csspath)),
-        (r'/js/(.*)', StaticFH, dict(path=jspath)),
-        #(r'/(.*)/', ViewHandler, dict(path=downloadpath)),
-        (r'/', ViewHandler, dict(path=downloadpath)),
-        (r'/(.*)', ViewHandler, dict(path=downloadpath)),
-    ],
-    **settings
-)
+def generateFileApp():
+    return tornado.web.Application(
+        handlers=[
+            (r'/download/', ViewHandler, dict(path=downloadpath)),
+            (r'/download/(.*)/', ViewHandler, dict(path=downloadpath)),
+            (r'/download/(.*)', DownloadFH, dict(path=downloadpath)),
+            (r'/static/', ViewHandler, dict(path=downloadpath)),
+            (r'/static/(.*)/', ViewHandler, dict(path=downloadpath)),
+            (r'/static/(.*)', StaticFH, dict(path=downloadpath)),
+            (r'/css/(.*)', StaticFH, dict(path=csspath)),
+            (r'/js/(.*)', StaticFH, dict(path=jspath)),
+            #(r'/(.*)/', ViewHandler, dict(path=downloadpath)),
+            (r'/', ViewHandler, dict(path=downloadpath)),
+            (r'/(.*)', ViewHandler, dict(path=downloadpath)),
+        ],
+        **settings
+    )
+app = generateFileApp()
 
 def load():
-    global listenport, UpperBoundSizeOfSingleUpload, UpperBoundSizeOfDir, UpperBoundFileNumberOfDir, hostname
+    global UpperBoundSizeOfSingleUpload, UpperBoundSizeOfDir, UpperBoundFileNumberOfDir
+    global listenport, hostname, downloadpath
+    global app
     tornado.options.parse_command_line()
     listenport = options.port
     UpperBoundSizeOfSingleUpload = options.singlesize
     UpperBoundSizeOfDir = options.dirsize
     UpperBoundFileNumberOfDir = options.dirnum
     hostname = options.hostname
+    downloadpath = os.path.join(filepath, options.folderpath)
+    app = generateFileApp()
 
 def status():
     print 'file: %s' % __file__
