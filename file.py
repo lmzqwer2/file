@@ -3,7 +3,7 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
-import os
+import os, re
 import filetype
 
 from tornado.options import define, options
@@ -29,6 +29,8 @@ define("singlesize", default=UpperBoundSizeOfSingleUpload, help="limit of single
 define("dirsize", default=UpperBoundSizeOfDir, help="limit of dir size", type=int)
 define("dirnum", default=UpperBoundFileNumberOfDir, help="limit of file number in dir", type=int)
 define("hostname", default=hostname, help="limit of file number in dir", type=str)
+
+validUploadFileName = re.compile(r'^[^./\\<>|:"*?][^/\\<>|:"*?]*$')
 
 class dir(object):
     @classmethod
@@ -178,7 +180,8 @@ class ViewHandler(tornado.web.RequestHandler):
                 for meta in file_metas:
                     filename = meta['filename']
                     filepath = os.path.join(expath, filename)
-                    if os.path.exists(filepath):
+                    if os.path.exists(filepath)\
+                        or validUploadFileName.match(filename) is None:
                         continue
                     with open(filepath,'wb') as f:
                         f.write(meta['body'])
