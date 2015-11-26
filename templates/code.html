@@ -8,11 +8,18 @@
 	</div>
 {% end %}
 {% block contents %}
-	<div id="AceEditor" class="AceEditor"><pre class="{{ext['ext']}}">{{text}}
+	<div><pre id="AceEditor" class="AceEditor {{ext['ext']}}">{{text}}
 		</pre>
 	</div>
 	<script src="/js/AceEditor/ace.js" type="text/javascript" charset="utf-8"></script>
 	<script>
+		var fontsizeArray = [
+			{ 'width': 400, 'font' : '1.1em' },
+			{ 'width': 750, 'font' : '1.2em' },
+			{ 'width': 1050, 'font' : '1.3em' },
+			{ 'width': 1400, 'font' : '1.4em' },
+			{ 'width': 1750, 'font' : '1.5em' }
+		];
 		var editor = ace.edit("AceEditor");
 		editor.setTheme("ace/theme/iplastic");
 		{% if ext['js'] is not None %}
@@ -20,18 +27,29 @@
 		{% end %}
 		var AceEditor = document.getElementById("AceEditor");
 		var title = document.getElementById('title');
-		AceEditor.style.fontSize = '1.4em';
+		AceEditor.style.fontSize = '1.1em';
 		(function(){
 			function resizeAceEditor(e){
 				var inheight = window.innerHeight
 					|| document.documentElement.clientHeight
 					|| document.body.clientHeight
 					+1;
+				var inWidth = window.innerWidth
+					|| document.documentElement.clientWidth
+					|| document.body.clientWidth
+					+1;
 				var titleHeight = (title.innerHeight || title.clientHeight || title.offsetHeight) || 0;
 				AceEditor.style.height = (inheight - titleHeight) + 'px';
+				var index = 0;
+				while (index + 1 < fontsizeArray.length && fontsizeArray[index].width < inWidth) index++;
+				AceEditor.style.fontSize = fontsizeArray[index].font;
+				editor.resize();
 			};
 			resizeAceEditor();
 			window.addEventListener('resize', resizeAceEditor);
+			setInterval(function(){
+				resizeAceEditor();
+			}, 200);
 		})();
 	</script>
 {% end %}
