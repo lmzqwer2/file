@@ -14,6 +14,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 import filetype
 import chardet
+import dir
 
 from tornado.options import define, options
 fileFolder = os.path.abspath(__file__).strip(__file__)
@@ -32,7 +33,7 @@ listenPort = 8080
 UpperBoundSizeOfSingleUpload = 4 * 1024 * 1024
 UpperBoundSizeOfDir = 64 * 1024 * 1024
 UpperBoundFileNumberOfDir = 256
-hostname = 'localhost:' + str(listenPort)
+hostname = None
 define("port", default=listenPort, help="run on the given port", type=int)
 define("singlesize", default=UpperBoundSizeOfSingleUpload, help="limit of single upload", type=int)
 define("dirsize", default=UpperBoundSizeOfDir, help="limit of dir size", type=int)
@@ -42,67 +43,11 @@ define("folder", default=downloadPath, help="root folder path of this program", 
 
 validUploadFileName = re.compile(r'^[^./\\<>|:"*?][^/\\<>|:"*?]*$')
 
-class dir(object):
-    @classmethod
-    def chain(cls, path):
-        folder = path.split('/')
-        if folder[0]=='.':
-            folder[0] = ''
-        L = []
-        link = ''
-        for item in folder:
-            link += item + '/'
-            L.append(dict(name=item, url=link))
-        return L
-
-    @classmethod
-    def exists(cls, path, file):
-        if os.path.isfile(path):
-            path = os.path.dirname(path)
-        filename = os.path.join(path, file)
-        if os.path.isfile(filename):
-            return filename
-        return None
-
-    @classmethod
-    def size(cls, path):
-        if os.path.isfile(path):
-            return os.path.getsize(path)
-        if os.path.isdir(path):
-            size = 0L
-            for root, dirs, files in os.walk(path):
-                size += sum([os.path.getsize(os.path.join(root, name)) for name in files])
-            return size
-        return -1
-
-    @classmethod
-    def num(cls, path):
-        if os.path.isfile(path):
-            return 1
-        if os.path.isdir(path):
-            return len(os.listdir(path))
-        return 0
-
-    @classmethod
-    def info(cls, path):
-        infoname = cls.exists(path, '.info')
-        if infoname:
-            with open(infoname, 'r') as f:
-                return f.readlines()
-        return None
-
-    @classmethod
-    def upload(cls, path):
-        uploadname = cls.exists(path, '.upload')
-        if uploadname is not None:
-            return True
-        return False
-
 class ViewHandler(tornado.web.RequestHandler):
     def initialize(self, path):
         self.absolute_path = path;
 
-    def translate_path(self,path):
+    def translate_path(self, path):
         path = path.split('?',1)[0]
         path = path.split('#',1)[0]
         path = os.path.normpath(tornado.escape.url_unescape(path))
@@ -117,32 +62,9 @@ class ViewHandler(tornado.web.RequestHandler):
             path = os.path.join(path,word)
         return path
 
-    def list_directory(self,path):
-        dir = os.listdir(path)
-        folder = []
-        file = []
-        for name in dir:
-            if name.startswith('.'):
-                continue
-            fullname = os.path.join(path,name)
-            displayname = linkname = name
-            filetype = 'file'
-            if os.path.isdir(fullname):
-                displayname = name + '/'
-                linkname = name + '/'
-                filetype = 'dir'
-                folder.append((linkname,displayname,filetype))
-                continue
-            if os.path.islink(fullname):
-                displayname = name + '@'
-                filetype = 'link'
-            file.append((linkname,displayname,filetype))
-        return folder + file
-
     def get(self,path=''):
         path = './' + path
         path = path.strip('/')
-        print path
         expath = os.path.join(self.absolute_path, path)
         if not os.path.exists(expath) \
             or not expath.startswith(downloadPath):
@@ -153,7 +75,7 @@ class ViewHandler(tornado.web.RequestHandler):
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path+'/')
                 return
-            names = self.list_directory(expath)
+            names = dir.list(expath)
             htmlrender = 'dir.html'
             if dir.upload(expath):
                 htmlrender = 'upload.html'
@@ -203,10 +125,9 @@ class ViewHandler(tornado.web.RequestHandler):
 class StaticFH(tornado.web.StaticFileHandler):
     def validate_absolute_path(self, root, absolute_path):
         host = self.request.headers.get('host')
-        if host is None \
-            or host != hostname:
+        if hostname is not None \
+            and host != hostname:
             return
-        print absolute_path
         return super(StaticFH, self).validate_absolute_path(root, absolute_path)
 
 class DownloadFH(StaticFH):
@@ -240,8 +161,6 @@ def load():
     preHostname = hostname
     hostname = options.hostname
     listenPort = options.port
-    if hostname == preHostname:
-        hostname = 'localhost:' + str(listenPort)
     UpperBoundSizeOfSingleUpload = options.singlesize
     UpperBoundSizeOfDir = options.dirsize
     UpperBoundFileNumberOfDir = options.dirnum
