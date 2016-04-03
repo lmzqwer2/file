@@ -1,6 +1,10 @@
 .trans, .folder a{
     -moz-transition: all 0.3s ease; -webkit-transition: all 0.3s ease; -o-transition: all 0.3s ease; transition: all 0.3s ease;
 }
+html{
+    height: 100%;
+    width: 100%;
+}
 body{
     background: #e8e8e8;
     font-size:0.75em;
@@ -8,6 +12,8 @@ body{
     padding: 0;
     margin: 0;
     font-family: 'Roboto Condensed','Droid Sans',arial,sans-serif;
+    height: 100%;
+    width: 100%;
 }
 .title{
     background: #f8f8f8;
@@ -28,8 +34,8 @@ body{
 }
 .path{
     top: 0; left: 0;
-    line-height: 2.5;
-    font-size: 1.7em;
+    line-height: 2;
+    font-size: 1.3em;
 }
 .info{
     border-left: 5px solid #cfcfcf;
@@ -42,27 +48,27 @@ body{
 }
 @media screen and (min-width: 400px) {
     .path{
-        font-size: 1.6em;
+        font-size: 1.3em;
     }
 }
 @media screen and (min-width: 750px) {
     .path{
-        font-size: 1.7em;
+        font-size: 1.4em;
     }
 }
 @media screen and (min-width: 1050px) {
     .path{
-        font-size: 1.8em;
+        font-size: 1.5em;
     }
 }
 @media screen and (min-width: 1400px) {
     .path{
-        font-size: 1.9em;
+        font-size: 1.6em;
     }
 }
 @media screen and (min-width: 1750px) {
     .path{
-        font-size: 2.0em;
+        font-size: 1.7em;
     }
 }
 .link-skewed{
