@@ -4,3 +4,5 @@ __pycache__/
 *.so
 *.db
 file/
+
+config_override.py
