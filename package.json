@@ -1,0 +1,27 @@
+{
+  "name": "file",
+  "version": "0.0.0",
+  "description": "整个项目旨在提供一个图形化的文件界面。",
+  "main": "file.py",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "babel-preset-react": "~6.5.0",
+    "babel-cli": "~6.6.5"
+  },
+  "scripts": {
+    "test": "python file.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lmzqwer2/file"
+  },
+  "keywords": [
+    "file"
+  ],
+  "author": "lmzqwer2",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/lmzqwer2/file/issues"
+  }
+}

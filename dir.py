@@ -4,6 +4,9 @@
 __author__ = 'lmzqwer2'
 
 import os
+import filetype
+import chardet
+import config
 
 def chain(path):
     '''
@@ -145,6 +148,45 @@ def upload(path):
         return True
     return False
 
+def status(path):
+    '''
+    return the status of the given @path
+
+    >>> status("./.test_dir_py/")
+    {'info': ['Welcome!', 'Dir testing.'], 'link': '/', 'name': '/', 'exists': True, 'type': {'ext': '', 'readable': False, 'js': None}, 'filetype': 'dir', 'isfile': False, 'upload': True}
+    >>> status("./.test_dir_py/emptyFolder")
+    {'link': 'emptyFolder/', 'name': 'emptyFolder/', 'exists': True, 'type': {'ext': 'emptyfolder', 'readable': False, 'js': None}, 'filetype': 'dir', 'isfile': False, 'upload': False}
+    >>> status("./.test_dir_py/.info")
+    {'link': '.info', 'name': '.info', 'exists': True, 'type': {'ext': 'info', 'readable': True, 'js': None}, 'filetype': 'file', 'isfile': True, 'size': 21}
+    >>> status("./.test_dir_py/NotFoundFolder")
+    {'exists': False}
+    '''
+    if not os.path.exists(path):
+        return dict(
+            exists = False
+        )
+    (filepath, filename) = os.path.split(path)
+    isfile = os.path.isfile(path)
+    linkname = filename + ('/' if not isfile else '')
+    displayname = linkname + ('@' if os.path.islink(path) else '')
+    filetypename = 'file' if isfile else 'dir'
+    d = dict(
+        exists = True,
+        isfile = isfile,
+        link = linkname,
+        name = displayname,
+        filetype = filetypename,
+        type = filetype.filetype(path),
+    )
+    if isfile:
+        d['size'] = size(path)
+    else:
+        textinfo = info(path)
+        if textinfo is not None:
+            d['info'] = textinfo
+        d['upload'] = upload(path)
+    return d
+
 def list(path):
     '''
     return a list of the files and folders in @path.
@@ -152,7 +194,7 @@ def list(path):
     retuan an empty array as answer when path point to a file.
 
     >>> list("./.test_dir_py")
-    [('emptyFolder/', 'emptyFolder/', 'dir'), ('normalName', 'normalName', 'file')]
+    [{'link': 'emptyFolder/', 'name': 'emptyFolder/', 'exists': True, 'type': {'ext': 'emptyfolder', 'readable': False, 'js': None}, 'filetype': 'dir', 'isfile': False, 'upload': False}, {'link': 'normalName', 'name': 'normalName', 'exists': True, 'type': {'ext': 'normalname', 'readable': True, 'js': None}, 'filetype': 'file', 'isfile': True, 'size': 9}]
     >>> list("./.test_dir_py/emptyFolder")
     []
     >>> list("./.test_dir_py/.upload")
@@ -166,21 +208,38 @@ def list(path):
     for name in dir:
         if name.startswith('.'):
             continue
-        fullname = os.path.join(path,name)
-        if os.path.isdir(fullname):
-            displayname = name + '/'
-            linkname = name + '/'
-            filetype = 'dir'
-            folder.append((linkname,displayname,filetype))
-            continue
-        displayname = linkname = name
-        filetype = 'file'
-        if os.path.islink(fullname):
-            displayname = name + '@'
-            filetype = 'link'
-        file.append((linkname,displayname,filetype))
+        fullname = os.path.join(path, name)
+        d = status(fullname)
+        if d.get('isfile', False):
+            file.append(d)
+        else:
+            folder.append(d)
     return folder + file
 
+def get(expath, path):
+    '''
+    return the more detail of the @expath with relative @path
+
+    >>> path = os.getcwd()
+    >>> def callGet(relpath):
+    ...     return get(os.path.join(path, relpath), relpath)
+    >>> callGet("./.test_dir_py")
+    {'info': ['Welcome!', 'Dir testing.'], 'list': [{'link': 'emptyFolder/', 'name': 'emptyFolder/', 'exists': True, 'type': {'ext': 'emptyfolder', 'readable': False, 'js': None}, 'filetype': 'dir', 'isfile': False, 'upload': False}, {'link': 'normalName', 'name': 'normalName', 'exists': True, 'type': {'ext': 'normalname', 'readable': True, 'js': None}, 'filetype': 'file', 'isfile': True, 'size': 9}], 'chain': [{'url': '/', 'name': 'LM file'}, {'url': '/.test_dir_py/', 'name': '.test_dir_py'}], 'link': '.test_dir_py/', 'name': '.test_dir_py/', 'exists': True, 'type': {'ext': 'test_dir_py', 'readable': False, 'js': None}, 'filetype': 'dir', 'isfile': False, 'upload': True}
+    >>> callGet("./.test_dir_py/.info")
+    {'link': '.info', 'name': '.info', 'exists': True, 'type': {'ext': 'info', 'readable': True, 'js': None}, 'filetype': 'file', 'isfile': True, 'chain': [{'url': '/', 'name': 'LM file'}, {'url': '/.test_dir_py/', 'name': '.test_dir_py'}, {'url': '/.test_dir_py/.info', 'name': '.info'}], 'size': 21}
+    >>> callGet("./.test_dir_py/NotFoundFolder")
+    {'exists': False}
+    '''
+    selfdict = status(expath)
+    if selfdict['exists']:
+        if not selfdict['isfile']:
+            selfdict['list'] = list(expath)
+        chainpath = chain(path)
+        chainpath[0]['name'] = config.root
+        if selfdict['isfile']:
+            chainpath[-1]['url'] = chainpath[-1]['url'][:-1]
+        selfdict['chain'] = chainpath
+    return selfdict
 
 if __name__ == '__main__':
     testFolder = './.test_dir_py'

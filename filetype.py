@@ -17,6 +17,7 @@ extname = {
 	'cpp'		: 'cpp',
 	'cc'		: 'cpp',
 	'h'			: 'cpp',
+	'hpp'		: 'cpp',
 	'css'		: 'css',
 	'js'		: 'javascript',
 	'coffee'	: 'ruby',
@@ -53,7 +54,8 @@ extname = {
 	'go'		: 'golang',
 	'tex'		: 'latex',
 	'io'		: 'io',
-	'vbs'		: 'vbscript'
+	'vbs'		: 'vbscript',
+	'yml'		: 'yaml',
 }
 
 jsname = {
@@ -65,7 +67,7 @@ jsname = {
     "asciidoc": "asciidoc",
     "assembly_x86": "assembly_x86",
     "autohotkey": "autohotkey",
-    "batchfile": "batchfile",
+    "bash": "batchfile",
     "c": "c_cpp",
     "cpp": "c_cpp",
     "c9search": "c9search",
@@ -182,6 +184,7 @@ jsname = {
     "xquery": "xquery",
     "yaml": "yaml",
     "django": "django",
+	"plain":"plain_text",
 }
 
 ms = magic.open(magic.NONE)
@@ -197,6 +200,7 @@ def filetype(name):
 	filename = os.path.split(name)[-1];
 	ext = f[-1] if len(f[-1])>0 else filename
 	ext = ext.strip('.').lower()
+	ext = ext.strip('~').lower()
 	langtype = extname.get(ext, ext)
 	jsfile = jsname.get(langtype, None) if langtype is not type else None
 	return {'readable': len(fileinfo.split('text'))>1, 'ext': langtype, 'js': jsfile}

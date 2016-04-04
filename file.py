@@ -11,7 +11,7 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
-import os, re
+import os, re, json
 import filetype
 import chardet
 import dir
@@ -28,36 +28,15 @@ class ViewHandler(tornado.web.RequestHandler):
         if not os.path.exists(expath) \
             or not expath.startswith(self.absolute_path):
             raise tornado.web.HTTPError(403)
-        chainpath = dir.chain(path)
-        chainpath[0]['name'] = config.root
         if os.path.isdir(expath):
             # a valid folder's url should always end with '/'
             # or the relative link would miss its place.
             if not self.request.path.endswith('/'):
                 self.redirect(self.request.path+'/')
                 return
-            names = dir.list(expath)
-            if dir.upload(expath):
-                htmlrender = 'upload.html'
-            else:
-                htmlrender = 'dir.html'
-            self.render(htmlrender, names=names, path=chainpath, info=dir.info(expath))
-            return
-        else:
-            chainpath[-1]['url'] = chainpath[-1]['url'][:-1]
-            info = filetype.filetype(expath)
-            if info.get('readable', False):
-                with open(expath, 'r') as f:
-                    text = f.read();
-                t = chardet.detect(text)
-                if t['confidence'] > 0.9 and t['encoding'] != 'utf-8':
-                    text = text.decode(t['encoding']).encode('utf-8')
-                self.render("code.html", text=text, path=chainpath, ext=info, info=None)
-                return
-            else:
-                self.redirect('/static' + self.request.path)
-                return
-        super(ViewHandler, self).get(path)
+        d = dir.get(expath, path)
+        self.render('index.html', d=d)
+        return
 
     def post(self, path=''):
         path = './' + path
@@ -83,6 +62,47 @@ class ViewHandler(tornado.web.RequestHandler):
                         f.write(meta['body'])
         self.redirect(self.request.path);
 
+class TextHandler(tornado.web.RequestHandler):
+    def initialize(self, path = config.folder):
+        self.absolute_path = path;
+
+    def get(self, path):
+        path = './' + path
+        path = path.strip('/')
+        expath = os.path.join(self.absolute_path, path)
+        if not os.path.exists(expath) \
+            or not expath.startswith(self.absolute_path):
+            raise tornado.web.HTTPError(403)
+        d = dir.status(expath)
+        info = filetype.filetype(expath)
+        if info.get('readable', False):
+            with open(expath, 'r') as f:
+                text = f.read();
+            t = chardet.detect(text)
+            if t['confidence'] > 0.9 and t['encoding'] != 'utf-8':
+                text = text.decode(t['encoding']).encode('utf-8')
+            self.write(text)
+        else:
+            self.write(json.dumps(dict(
+                readable = False
+            )))
+        self.finish()
+        return
+
+class APIhandler(tornado.web.RequestHandler):
+
+    def initialize(self, path = config.folder):
+        self.absolute_path = path;
+
+    def get(self,path=''):
+        path = './' + path
+        path = path.strip('/')
+        expath = os.path.join(self.absolute_path, path)
+        d = dir.get(expath, path)
+        self.write(d)
+        self.finish()
+
+
 class StaticFH(tornado.web.StaticFileHandler):
     def validate_absolute_path(self, root, absolute_path):
         host = self.request.headers.get('host')
@@ -107,8 +127,12 @@ def generateFileApp():
             (r'/static/', ViewHandler),
             (r'/static/(.*)/', ViewHandler),
             (r'/static/(.*)', StaticFH, dict(path=config.folder)),
+            (r'/text/', TextHandler),
+            (r'/text/(.*)', TextHandler),
             (r'/css/(.*)', StaticFH, dict(path=config.cssPath)),
             (r'/js/(.*)', StaticFH, dict(path=config.jsPath)),
+            (r'/api', APIhandler),
+            (r'/api/(.*)', APIhandler),
             #(r'/(.*)/', ViewHandler),
             (r'/', ViewHandler),
             (r'/(.*)', ViewHandler),

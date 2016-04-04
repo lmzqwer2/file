@@ -4,5 +4,8 @@ __pycache__/
 *.so
 *.db
 file/
+js/react/
 
 config_override.py
+
+node_modules
